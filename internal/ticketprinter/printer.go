@@ -2,6 +2,8 @@ package ticketprinter
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"image"
 	"log/slog"
 	"time"
@@ -18,23 +20,21 @@ const (
 )
 
 type BrotherPrinter struct {
-	printer *brotherql.LabelPrinter
+	addr    string
 	timeout time.Duration
+	logger  *slog.Logger
 }
 
 func NewBrotherPrinter(ctx context.Context, addr string, timeout time.Duration) (*BrotherPrinter, func(), error) {
-	printer, err := brotherql.NewLabelPrinter(ctx, printerModel, printerBackend, addr)
-	if err != nil {
-		return nil, nil, err
+	_ = ctx
+
+	printer := &BrotherPrinter{
+		addr:    addr,
+		timeout: timeout,
+		logger:  slog.Default(),
 	}
 
-	closePrinter := func() {
-		if err := printer.Close(); err != nil {
-			slog.Error("close printer failed", "err", err)
-		}
-	}
-
-	return &BrotherPrinter{printer: printer, timeout: timeout}, closePrinter, nil
+	return printer, func() {}, nil
 }
 
 func (p *BrotherPrinter) Print(ctx context.Context, label Label) error {
@@ -46,6 +46,34 @@ func (p *BrotherPrinter) Print(ctx context.Context, label Label) error {
 	printCtx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
+	printer, err := brotherql.NewLabelPrinter(printCtx, printerModel, printerBackend, p.addr)
+	if err != nil {
+		return fmt.Errorf("create printer: %w", err)
+	}
+
+	opts := printOptions()
+	start := time.Now()
+	p.logger.Info("printer write started", "ticket", label.TicketNumber, "addr", p.addr, "timeout", p.timeout)
+
+	printErr := printer.Print(printCtx, []image.Image{img}, opts)
+	if printErr == nil {
+		p.logger.Info("printer write completed", "ticket", label.TicketNumber, "duration", time.Since(start))
+	}
+
+	closeErr := printer.Close()
+	if closeErr != nil {
+		p.logger.Error("printer connection close failed", "ticket", label.TicketNumber, "err", closeErr)
+	} else {
+		p.logger.Info("printer connection closed", "ticket", label.TicketNumber)
+	}
+
+	if printErr != nil || closeErr != nil {
+		return errors.Join(printErr, closeErr)
+	}
+	return nil
+}
+
+func printOptions() brotherql.PrintOptions {
 	opts := brotherql.NewDefaultOptions(printerLabel)
 	opts.Cut = true
 	opts.Dither = false
@@ -56,5 +84,5 @@ func (p *BrotherPrinter) Print(ctx context.Context, label Label) error {
 	opts.Hq = true
 	opts.Threshold = printerThreshold
 
-	return p.printer.Print(printCtx, []image.Image{img}, opts)
+	return opts
 }

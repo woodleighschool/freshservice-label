@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -28,8 +29,9 @@ type Server struct {
 }
 
 type printJob struct {
-	label  Label
-	result chan error
+	label    Label
+	queuedAt time.Time
+	result   chan error
 }
 
 func NewServer(cfg Config, printer Printer, logger *slog.Logger) *Server {
@@ -73,7 +75,16 @@ func (s *Server) worker() {
 		case <-s.stop:
 			return
 		case job := <-s.jobs:
-			job.result <- s.printer.Print(context.Background(), job.label)
+			start := time.Now()
+			s.logger.Info("print started", "ticket", job.label.TicketNumber, "wait", start.Sub(job.queuedAt))
+
+			err := s.printer.Print(context.Background(), job.label)
+			if err != nil {
+				s.logger.Error("print failed", "ticket", job.label.TicketNumber, "duration", time.Since(start), "err", err)
+			} else {
+				s.logger.Info("print completed", "ticket", job.label.TicketNumber, "duration", time.Since(start))
+			}
+			job.result <- err
 		}
 	}
 }
@@ -102,10 +113,12 @@ func (s *Server) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	job := printJob{label: label, result: make(chan error, 1)}
+	job := printJob{label: label, queuedAt: time.Now(), result: make(chan error, 1)}
 	select {
 	case s.jobs <- job:
+		s.logger.Info("print queued", "ticket", label.TicketNumber, "queue_depth", len(s.jobs), "queue_capacity", cap(s.jobs))
 	default:
+		s.logger.Warn("print queue full", "ticket", label.TicketNumber, "queue_capacity", cap(s.jobs))
 		writeJSON(w, http.StatusServiceUnavailable, "failed", "print queue is full")
 		return
 	}
@@ -113,11 +126,9 @@ func (s *Server) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	select {
 	case err := <-job.result:
 		if err != nil {
-			s.logger.Error("print failed", "ticket", label.TicketNumber, "err", err)
 			writeJSON(w, http.StatusInternalServerError, "failed", err.Error())
 			return
 		}
-		s.logger.Info("print completed", "ticket", label.TicketNumber)
 		writeJSON(w, http.StatusOK, "success", "")
 	case <-r.Context().Done():
 		s.logger.Info("request cancelled", "ticket", label.TicketNumber)
