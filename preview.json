@@ -1,0 +1,7 @@
+{
+  "ticket_url": "https://freshservice.example/a/tickets/12345",
+  "requester_name": "Example Person",
+  "subject": "REPAIR - laptop issue",
+  "created_at": "2026-05-05T02:35:00Z",
+  "compnow_ticket_no": "CN123456"
+}
