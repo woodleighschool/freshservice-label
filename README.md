@@ -60,13 +60,14 @@ curl -X POST http://127.0.0.1:8080/webhook \
 ## Development
 
 ```sh
-make check
+mise run test
+mise run lint
 ```
 
 To preview the label without starting the service or using stock:
 
 ```sh
-make preview
+mise run preview
 ```
 
 This reads `preview.json` and writes `preview.png` in the repo root. Preview mode only renders the PNG; it does not read service env vars or contact the printer.
