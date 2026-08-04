@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"log/slog"
 	"net"
 	"testing"
 	"time"
@@ -54,11 +55,7 @@ func TestBrotherPrinterClosesNetworkConnectionAfterPrint(t *testing.T) {
 		}
 	}()
 
-	printer, closePrinter, err := NewBrotherPrinter(context.Background(), listener.Addr().String(), 2*time.Second)
-	if err != nil {
-		t.Fatalf("new printer: %v", err)
-	}
-	t.Cleanup(closePrinter)
+	printer := NewBrotherPrinter(listener.Addr().String(), 2*time.Second, slog.New(slog.DiscardHandler))
 
 	label := Label{
 		TicketURL:       "https://freshservice.example/a/tickets/1234",

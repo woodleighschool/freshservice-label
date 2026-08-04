@@ -38,9 +38,6 @@ func NewServer(cfg Config, printer Printer, logger *slog.Logger) *Server {
 	if cfg.QueueDepth < 1 {
 		cfg.QueueDepth = 1
 	}
-	if logger == nil {
-		logger = slog.Default()
-	}
 
 	server := &Server{
 		token:   cfg.WebhookToken,
@@ -75,27 +72,28 @@ func (s *Server) worker() {
 		case <-s.stop:
 			return
 		case job := <-s.jobs:
+			ctx := context.Background()
 			start := time.Now()
-			s.logger.Info("print started", "ticket", job.label.TicketNumber, "wait", start.Sub(job.queuedAt))
+			s.logger.InfoContext(ctx, "print started", "ticket", job.label.TicketNumber, "wait", start.Sub(job.queuedAt))
 
-			err := s.printer.Print(context.Background(), job.label)
+			err := s.printer.Print(ctx, job.label)
 			if err != nil {
-				s.logger.Error("print failed", "ticket", job.label.TicketNumber, "duration", time.Since(start), "err", err)
+				s.logger.ErrorContext(ctx, "print failed", "ticket", job.label.TicketNumber, "duration", time.Since(start), "err", err)
 			} else {
-				s.logger.Info("print completed", "ticket", job.label.TicketNumber, "duration", time.Since(start))
+				s.logger.InfoContext(ctx, "print completed", "ticket", job.label.TicketNumber, "duration", time.Since(start))
 			}
 			job.result <- err
 		}
 	}
 }
 
-func (s *Server) handleHealthz(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, "ok", "")
+func (s *Server) handleHealthz(w http.ResponseWriter, r *http.Request) {
+	s.writeJSON(r.Context(), w, http.StatusOK, "ok", "")
 }
 
 func (s *Server) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	if !validBearer(r.Header.Get("Authorization"), s.token) {
-		writeJSON(w, http.StatusUnauthorized, "failed", "unauthorized")
+		s.writeJSON(r.Context(), w, http.StatusUnauthorized, "failed", "unauthorized")
 		return
 	}
 
@@ -103,35 +101,35 @@ func (s *Server) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&payload); err != nil {
-		writeJSON(w, http.StatusBadRequest, "failed", "invalid JSON")
+		s.writeJSON(r.Context(), w, http.StatusBadRequest, "failed", "invalid JSON")
 		return
 	}
 
 	label, err := payload.Label()
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, "failed", err.Error())
+		s.writeJSON(r.Context(), w, http.StatusBadRequest, "failed", err.Error())
 		return
 	}
 
 	job := printJob{label: label, queuedAt: time.Now(), result: make(chan error, 1)}
 	select {
 	case s.jobs <- job:
-		s.logger.Info("print queued", "ticket", label.TicketNumber, "queue_depth", len(s.jobs), "queue_capacity", cap(s.jobs))
+		s.logger.InfoContext(r.Context(), "print queued", "ticket", label.TicketNumber, "queue_depth", len(s.jobs), "queue_capacity", cap(s.jobs))
 	default:
-		s.logger.Warn("print queue full", "ticket", label.TicketNumber, "queue_capacity", cap(s.jobs))
-		writeJSON(w, http.StatusServiceUnavailable, "failed", "print queue is full")
+		s.logger.WarnContext(r.Context(), "print queue full", "ticket", label.TicketNumber, "queue_capacity", cap(s.jobs))
+		s.writeJSON(r.Context(), w, http.StatusServiceUnavailable, "failed", "print queue is full")
 		return
 	}
 
 	select {
 	case err := <-job.result:
 		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, "failed", err.Error())
+			s.writeJSON(r.Context(), w, http.StatusInternalServerError, "failed", err.Error())
 			return
 		}
-		writeJSON(w, http.StatusOK, "success", "")
+		s.writeJSON(r.Context(), w, http.StatusOK, "success", "")
 	case <-r.Context().Done():
-		s.logger.Info("request cancelled", "ticket", label.TicketNumber)
+		s.logger.InfoContext(r.Context(), "request cancelled", "ticket", label.TicketNumber)
 	}
 }
 
@@ -144,7 +142,7 @@ func validBearer(header, token string) bool {
 	return subtle.ConstantTimeCompare([]byte(strings.TrimSpace(got)), []byte(token)) == 1
 }
 
-func writeJSON(w http.ResponseWriter, code int, status, reason string) {
+func (s *Server) writeJSON(ctx context.Context, w http.ResponseWriter, code int, status, reason string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 
@@ -157,6 +155,6 @@ func writeJSON(w http.ResponseWriter, code int, status, reason string) {
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		slog.Error("write response failed", "err", err)
+		s.logger.ErrorContext(ctx, "write response failed", "err", err)
 	}
 }

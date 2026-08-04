@@ -25,16 +25,12 @@ type BrotherPrinter struct {
 	logger  *slog.Logger
 }
 
-func NewBrotherPrinter(ctx context.Context, addr string, timeout time.Duration) (*BrotherPrinter, func(), error) {
-	_ = ctx
-
-	printer := &BrotherPrinter{
+func NewBrotherPrinter(addr string, timeout time.Duration, logger *slog.Logger) *BrotherPrinter {
+	return &BrotherPrinter{
 		addr:    addr,
 		timeout: timeout,
-		logger:  slog.Default(),
+		logger:  logger,
 	}
-
-	return printer, func() {}, nil
 }
 
 func (p *BrotherPrinter) Print(ctx context.Context, label Label) error {
@@ -53,18 +49,18 @@ func (p *BrotherPrinter) Print(ctx context.Context, label Label) error {
 
 	opts := printOptions()
 	start := time.Now()
-	p.logger.Info("printer write started", "ticket", label.TicketNumber, "addr", p.addr, "timeout", p.timeout)
+	p.logger.InfoContext(ctx, "printer write started", "ticket", label.TicketNumber, "addr", p.addr, "timeout", p.timeout)
 
 	printErr := printer.Print(printCtx, []image.Image{img}, opts)
 	if printErr == nil {
-		p.logger.Info("printer write completed", "ticket", label.TicketNumber, "duration", time.Since(start))
+		p.logger.InfoContext(ctx, "printer write completed", "ticket", label.TicketNumber, "duration", time.Since(start))
 	}
 
 	closeErr := printer.Close()
 	if closeErr != nil {
-		p.logger.Error("printer connection close failed", "ticket", label.TicketNumber, "err", closeErr)
+		p.logger.ErrorContext(ctx, "printer connection close failed", "ticket", label.TicketNumber, "err", closeErr)
 	} else {
-		p.logger.Info("printer connection closed", "ticket", label.TicketNumber)
+		p.logger.InfoContext(ctx, "printer connection closed", "ticket", label.TicketNumber)
 	}
 
 	if printErr != nil || closeErr != nil {
