@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/woodleighschool/freshservice-label/compare/0.1.3...0.1.4) (2026-08-08)
+
+
+### Bug Fixes
+
+* **renovate:** wait for complete toolchain groups ([d5586b2](https://github.com/woodleighschool/freshservice-label/commit/d5586b267b5c805c2c57941e6415fcc61d695f7e))
+
 ## [0.1.3](https://github.com/woodleighschool/freshservice-label/compare/0.1.2...0.1.3) (2026-08-04)
 
 
