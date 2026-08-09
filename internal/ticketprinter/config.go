@@ -12,6 +12,7 @@ type Config struct {
 	ListenAddr   string
 	WebhookToken string
 	PrinterAddr  string
+	LogoURL      string
 	QueueDepth   int
 	PrintTimeout time.Duration
 }
@@ -21,6 +22,7 @@ func LoadConfig() (Config, error) {
 		ListenAddr:   env("LISTEN_ADDR", ":8080"),
 		WebhookToken: os.Getenv("WEBHOOK_TOKEN"),
 		PrinterAddr:  os.Getenv("PRINTER_ADDR"),
+		LogoURL:      os.Getenv("LOGO_URL"),
 		QueueDepth:   10,
 		PrintTimeout: 30 * time.Second,
 	}

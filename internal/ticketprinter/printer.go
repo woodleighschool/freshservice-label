@@ -33,12 +33,7 @@ func NewBrotherPrinter(addr string, timeout time.Duration, logger *slog.Logger) 
 	}
 }
 
-func (p *BrotherPrinter) Print(ctx context.Context, label Label) error {
-	img, err := renderLabel(label)
-	if err != nil {
-		return err
-	}
-
+func (p *BrotherPrinter) Print(ctx context.Context, img image.Image, reference string) error {
 	printCtx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
@@ -49,18 +44,18 @@ func (p *BrotherPrinter) Print(ctx context.Context, label Label) error {
 
 	opts := printOptions()
 	start := time.Now()
-	p.logger.InfoContext(ctx, "printer write started", "ticket", label.TicketNumber, "addr", p.addr, "timeout", p.timeout)
+	p.logger.InfoContext(ctx, "printer write started", "reference", reference, "addr", p.addr, "timeout", p.timeout)
 
 	printErr := printer.Print(printCtx, []image.Image{img}, opts)
 	if printErr == nil {
-		p.logger.InfoContext(ctx, "printer write completed", "ticket", label.TicketNumber, "duration", time.Since(start))
+		p.logger.InfoContext(ctx, "printer write completed", "reference", reference, "duration", time.Since(start))
 	}
 
 	closeErr := printer.Close()
 	if closeErr != nil {
-		p.logger.ErrorContext(ctx, "printer connection close failed", "ticket", label.TicketNumber, "err", closeErr)
+		p.logger.ErrorContext(ctx, "printer connection close failed", "reference", reference, "err", closeErr)
 	} else {
-		p.logger.InfoContext(ctx, "printer connection closed", "ticket", label.TicketNumber)
+		p.logger.InfoContext(ctx, "printer connection closed", "reference", reference)
 	}
 
 	if printErr != nil || closeErr != nil {

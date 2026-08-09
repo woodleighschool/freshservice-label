@@ -58,14 +58,20 @@ func TestBrotherPrinterClosesNetworkConnectionAfterPrint(t *testing.T) {
 	printer := NewBrotherPrinter(listener.Addr().String(), 2*time.Second, slog.New(slog.DiscardHandler))
 
 	label := Label{
-		TicketURL:       "https://freshservice.example/a/tickets/1234",
-		TicketNumber:    "1234",
-		RequesterName:   "CODEX TEST",
-		Type:            "Repair",
-		CompNowTicketNo: "CN1234",
-		Date:            "05 May 2026",
+		Reference: "1234",
+		QRURL:     "https://freshservice.example/a/tickets/1234",
+		Title:     "CODEX TEST",
+		Rows: []Row{
+			{Label: "Type", Value: "Repair"},
+			{Label: "Ticket #", Value: "1234"},
+		},
+		Footer: "05 May 2026",
 	}
-	if err := printer.Print(context.Background(), label); err != nil {
+	img, err := NewRenderer(nil).renderLabel(label)
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	if err := printer.Print(context.Background(), img, label.Reference); err != nil {
 		t.Fatalf("print: %v", err)
 	}
 

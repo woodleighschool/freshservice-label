@@ -1,17 +1,19 @@
 package ticketprinter
 
 import (
-	"bytes"
-	_ "embed"
+	"errors"
 	"fmt"
 	"image"
+	"image/color"
 	"image/draw"
 	"image/png"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 
 	qrcode "github.com/skip2/go-qrcode"
+	xdraw "golang.org/x/image/draw"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/gobold"
 	"golang.org/x/image/font/gofont/goregular"
@@ -20,42 +22,93 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
-// Keep these files beside the renderer. Go embed cannot reach outside this package.
-//
-//go:embed assets/template.png
-var templatePNG []byte
-
 var (
 	regularFont = mustParseFont(goregular.TTF)
 	boldFont    = mustParseFont(gobold.TTF)
 )
 
-const (
-	labelWidth  = 1181
-	labelHeight = 566
-)
+const referenceSlipHeight = 566
 
-const (
-	qrX        = 19
-	qrY        = 19
-	qrSize     = 528
-	textX      = 566
-	textStartY = 220
-	lineGap    = 10
-	maxNameW   = 596
-	nameSize   = 50
-	bodySize   = 48
-)
+type slipLayout struct {
+	bounds            image.Rectangle
+	qrBounds          image.Rectangle
+	contentBounds     image.Rectangle
+	logoBounds        image.Rectangle
+	titleWithLogoY    int
+	titleWithoutLogoY int
+	titleSize         float64
+	rowSize           float64
+	titleAdvance      int
+	rowAdvance        int
+	lineGap           int
+}
 
-func RenderPNG(w io.Writer, label Label) error {
-	img, err := renderLabel(label)
+func newSlipLayout(height int) slipLayout {
+	const (
+		referenceWidth          = 1181
+		referenceMargin         = 19
+		referenceLogoBottom     = 149
+		referenceLogoRight      = 1163
+		referenceTitleWithLogoY = 220
+		referenceTitleSize      = 50
+		referenceRowSize        = 48
+		referenceLineGap        = 10
+	)
+
+	scale := float64(height) / referenceSlipHeight
+	px := func(value int) int {
+		return int(math.Round(float64(value) * scale))
+	}
+
+	width := px(referenceWidth)
+	margin := px(referenceMargin)
+	qrSize := height - 2*margin
+	contentX := margin + qrSize + margin
+	contentBounds := image.Rect(contentX, margin, width-margin, height-margin)
+	titleSize := float64(referenceTitleSize) * scale
+	rowSize := float64(referenceRowSize) * scale
+	lineGap := px(referenceLineGap)
+
+	return slipLayout{
+		bounds:            image.Rect(0, 0, width, height),
+		qrBounds:          image.Rect(margin, margin, margin+qrSize, margin+qrSize),
+		contentBounds:     contentBounds,
+		logoBounds:        image.Rect(contentBounds.Min.X, margin, px(referenceLogoRight), px(referenceLogoBottom)),
+		titleWithLogoY:    px(referenceTitleWithLogoY),
+		titleWithoutLogoY: margin + int(math.Round(titleSize)),
+		titleSize:         titleSize,
+		rowSize:           rowSize,
+		titleAdvance:      int(math.Round(titleSize)) + lineGap,
+		rowAdvance:        int(math.Round(rowSize)) + lineGap,
+		lineGap:           lineGap,
+	}
+}
+
+// Renderer composes labels using the fixed landscape slip layout.
+type Renderer struct {
+	layout slipLayout
+	logo   image.Image
+}
+
+// NewRenderer creates a renderer with an optional logo image.
+func NewRenderer(logo image.Image) *Renderer {
+	return &Renderer{
+		layout: newSlipLayout(referenceSlipHeight),
+		logo:   logo,
+	}
+}
+
+// RenderPNG writes label as a PNG using the fixed slip layout.
+func (r *Renderer) RenderPNG(w io.Writer, label Label) error {
+	img, err := r.renderLabel(label)
 	if err != nil {
 		return err
 	}
 	return png.Encode(w, img)
 }
 
-func WritePNG(path string, label Label) error {
+// WritePNG renders label to path, creating its parent directory when needed.
+func (r *Renderer) WritePNG(path string, label Label) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("create output PNG directory: %w", err)
 	}
@@ -68,72 +121,118 @@ func WritePNG(path string, label Label) error {
 		_ = file.Close()
 	}()
 
-	if err := RenderPNG(file, label); err != nil {
+	if err := r.RenderPNG(file, label); err != nil {
 		return fmt.Errorf("write output PNG: %w", err)
 	}
 	return nil
 }
 
-func renderLabel(label Label) (image.Image, error) {
-	base, err := png.Decode(bytes.NewReader(templatePNG))
+func (r *Renderer) renderLabel(label Label) (image.Image, error) {
+	label, err := label.normalize()
 	if err != nil {
-		return nil, fmt.Errorf("decode template: %w", err)
+		return nil, err
 	}
+	return r.render(label)
+}
 
-	canvas := image.NewRGBA(image.Rect(0, 0, labelWidth, labelHeight))
-	draw.Draw(canvas, canvas.Bounds(), base, image.Point{}, draw.Src)
+func (r *Renderer) render(label Label) (image.Image, error) {
+	canvas := image.NewRGBA(r.layout.bounds)
+	draw.Draw(canvas, canvas.Bounds(), image.NewUniform(color.White), image.Point{}, draw.Src)
 
-	qr, err := qrcode.New(label.TicketURL, qrcode.Medium)
+	qr, err := qrcode.New(label.QRURL, qrcode.Medium)
 	if err != nil {
 		return nil, fmt.Errorf("create QR code: %w", err)
 	}
 	qr.DisableBorder = true
-	draw.Draw(canvas, image.Rect(qrX, qrY, qrX+qrSize, qrY+qrSize), qr.Image(qrSize), image.Point{}, draw.Over)
+	draw.Draw(canvas, r.layout.qrBounds, qr.Image(r.layout.qrBounds.Dx()), image.Point{}, draw.Over)
 
-	regularFace, err := fontFace(regularFont, bodySize)
+	if r.logo != nil {
+		drawContained(canvas, r.layout.logoBounds, r.logo)
+	}
+
+	regularFace, err := fontFace(regularFont, r.layout.rowSize)
 	if err != nil {
 		return nil, err
 	}
 	defer closeFace(regularFace)
 
-	boldFace, err := fittingBoldFace(label.RequesterName)
+	titleFace, err := fittingFace(boldFont, label.Title, r.layout.titleSize, r.layout.contentBounds.Dx())
 	if err != nil {
 		return nil, err
 	}
-	defer closeFace(boldFace)
+	defer closeFace(titleFace)
 
-	y := textStartY
-	drawText(canvas, textX, y, label.RequesterName, boldFace)
-	y += nameSize + lineGap
-
-	if label.Type != "" {
-		drawText(canvas, textX, y, "Type: "+label.Type, regularFace)
-		y += bodySize + lineGap
+	for i, row := range label.Rows {
+		if font.MeasureString(regularFace, row.text()).Ceil() > r.layout.contentBounds.Dx() {
+			return nil, fmt.Errorf("row %d does not fit the label", i+1)
+		}
 	}
-	drawText(canvas, textX, y, "HelpDesk #: "+label.TicketNumber, regularFace)
-
-	if label.CompNowTicketNo != "" {
-		y += bodySize + lineGap
-		drawText(canvas, textX, y, "CompNow #: "+label.CompNowTicketNo, regularFace)
+	if font.MeasureString(regularFace, label.Footer).Ceil() > r.layout.contentBounds.Dx() {
+		return nil, errors.New("footer does not fit the label")
 	}
 
-	drawTextBottomAligned(canvas, textX, qrY+qrSize, label.Date, regularFace)
+	titleY := r.layout.titleWithoutLogoY
+	if r.logo != nil {
+		titleY = r.layout.titleWithLogoY
+	}
+
+	flowBottom := titleY + titleFace.Metrics().Descent.Ceil()
+	if len(label.Rows) != 0 {
+		lastRowY := titleY + r.layout.titleAdvance + (len(label.Rows)-1)*r.layout.rowAdvance
+		flowBottom = lastRowY + regularFace.Metrics().Descent.Ceil()
+	}
+
+	flowLimit := r.layout.contentBounds.Max.Y
+	footerY := 0
+	if label.Footer != "" {
+		metrics := regularFace.Metrics()
+		footerY = r.layout.contentBounds.Max.Y - metrics.Descent.Ceil()
+		flowLimit = footerY - metrics.Ascent.Ceil() - r.layout.lineGap
+	}
+	if flowBottom > flowLimit {
+		return nil, errors.New("label content does not fit the slip")
+	}
+
+	drawText(canvas, r.layout.contentBounds.Min.X, titleY, label.Title, titleFace)
+	rowY := titleY + r.layout.titleAdvance
+	for _, row := range label.Rows {
+		drawText(canvas, r.layout.contentBounds.Min.X, rowY, row.text(), regularFace)
+		rowY += r.layout.rowAdvance
+	}
+	if label.Footer != "" {
+		drawText(canvas, r.layout.contentBounds.Min.X, footerY, label.Footer, regularFace)
+	}
 
 	return canvas, nil
 }
 
-func fittingBoldFace(text string) (font.Face, error) {
-	for size := float64(nameSize); size > 8; size-- {
-		face, err := fontFace(boldFont, size)
+func fittingFace(parsed *sfnt.Font, text string, maxSize float64, maxWidth int) (font.Face, error) {
+	minimumSize := maxSize * 8 / 50
+	for size := maxSize; size >= minimumSize; size-- {
+		face, err := fontFace(parsed, size)
 		if err != nil {
 			return nil, err
 		}
-		if font.MeasureString(face, text).Ceil() <= maxNameW {
+		if font.MeasureString(face, text).Ceil() <= maxWidth {
 			return face, nil
 		}
 		closeFace(face)
 	}
-	return fontFace(boldFont, 8)
+	return nil, errors.New("title does not fit the label")
+}
+
+func drawContained(dst draw.Image, bounds image.Rectangle, src image.Image) {
+	sourceBounds := src.Bounds()
+	scale := math.Min(
+		float64(bounds.Dx())/float64(sourceBounds.Dx()),
+		float64(bounds.Dy())/float64(sourceBounds.Dy()),
+	)
+	width := max(1, int(math.Round(float64(sourceBounds.Dx())*scale)))
+	height := max(1, int(math.Round(float64(sourceBounds.Dy())*scale)))
+	x := bounds.Min.X + (bounds.Dx()-width)/2
+	y := bounds.Min.Y + (bounds.Dy()-height)/2
+	target := image.Rect(x, y, x+width, y+height)
+	xdraw.CatmullRom.Scale(dst, target, src, sourceBounds, draw.Over, nil)
 }
 
 func mustParseFont(fontBytes []byte) *sfnt.Font {
@@ -170,10 +269,4 @@ func drawText(dst draw.Image, x, y int, text string, face font.Face) {
 		Dot:  fixed.P(x, y),
 	}
 	drawer.DrawString(text)
-}
-
-func drawTextBottomAligned(dst draw.Image, x, bottomY int, text string, face font.Face) {
-	metrics := face.Metrics()
-	descent := metrics.Descent.Ceil()
-	drawText(dst, x, bottomY-descent, text, face)
 }

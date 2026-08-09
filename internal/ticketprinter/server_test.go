@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"image"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -16,7 +19,7 @@ import (
 )
 
 func TestRoutesRegisterOnChiRouter(t *testing.T) {
-	app := NewServer(Config{WebhookToken: "secret"}, nil, slog.New(slog.DiscardHandler))
+	app := NewServer(Config{WebhookToken: "secret"}, NewRenderer(nil), nil, slog.New(slog.DiscardHandler))
 	t.Cleanup(app.Close)
 
 	router := chi.NewRouter()
@@ -47,7 +50,7 @@ func TestRoutesRegisterOnChiRouter(t *testing.T) {
 
 func TestWebhookResponsesWaitForEachQueuedPrint(t *testing.T) {
 	printer := newBlockingPrinter()
-	app := NewServer(Config{WebhookToken: "secret", QueueDepth: 2}, printer, slog.New(slog.DiscardHandler))
+	app := NewServer(Config{WebhookToken: "secret", QueueDepth: 2}, NewRenderer(nil), printer, slog.New(slog.DiscardHandler))
 	t.Cleanup(app.Close)
 
 	router := chi.NewRouter()
@@ -80,6 +83,42 @@ func TestWebhookResponsesWaitForEachQueuedPrint(t *testing.T) {
 	}
 }
 
+func TestWebhookRejectsContentThatDoesNotFitBeforePrinting(t *testing.T) {
+	printer := &countingPrinter{}
+	app := NewServer(Config{WebhookToken: "secret"}, NewRenderer(nil), printer, slog.New(slog.DiscardHandler))
+	t.Cleanup(app.Close)
+
+	label := webhookPayload("1001")
+	label.Rows[0].Value = strings.Repeat("too wide ", 100)
+	body, err := json.Marshal(label)
+	if err != nil {
+		t.Fatalf("marshal label: %v", err)
+	}
+	request := httptest.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(body))
+	request.Header.Set("Authorization", "Bearer secret")
+	response := httptest.NewRecorder()
+
+	router := chi.NewRouter()
+	app.Routes(router)
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d; body = %q", response.Code, http.StatusBadRequest, response.Body.String())
+	}
+	if got := printer.prints.Load(); got != 0 {
+		t.Fatalf("printer calls = %d, want 0", got)
+	}
+}
+
+type countingPrinter struct {
+	prints atomic.Int32
+}
+
+func (p *countingPrinter) Print(_ context.Context, _ image.Image, _ string) error {
+	p.prints.Add(1)
+	return nil
+}
+
 type blockingPrinter struct {
 	started chan string
 	release chan struct{}
@@ -95,13 +134,13 @@ func newBlockingPrinter() *blockingPrinter {
 	}
 }
 
-func (p *blockingPrinter) Print(_ context.Context, label Label) error {
-	p.started <- label.TicketNumber
+func (p *blockingPrinter) Print(_ context.Context, _ image.Image, reference string) error {
+	p.started <- reference
 	<-p.release
 
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	p.printed = append(p.printed, label.TicketNumber)
+	p.printed = append(p.printed, reference)
 	return nil
 }
 
@@ -136,7 +175,7 @@ type webhookResult struct {
 	err    error
 }
 
-func postWebhook(t *testing.T, baseURL, token string, payload WebhookPayload) <-chan webhookResult {
+func postWebhook(t *testing.T, baseURL, token string, payload Label) <-chan webhookResult {
 	t.Helper()
 
 	body, err := json.Marshal(payload)
@@ -174,13 +213,17 @@ func postWebhook(t *testing.T, baseURL, token string, payload WebhookPayload) <-
 	return result
 }
 
-func webhookPayload(ticket string) WebhookPayload {
-	return WebhookPayload{
-		TicketURL:       "https://freshservice.example/a/tickets/" + ticket,
-		RequesterName:   "Queue Test",
-		Subject:         "REPAIR - queue test",
-		CreatedAt:       "2026-05-05T02:35:00Z",
-		CompNowTicketNo: "CN" + ticket,
+func webhookPayload(ticket string) Label {
+	return Label{
+		Reference: ticket,
+		QRURL:     "https://freshservice.example/a/tickets/" + ticket,
+		Title:     "Queue Test",
+		Rows: []Row{
+			{Label: "Type", Value: "Repair"},
+			{Label: "Ticket #", Value: ticket},
+			{Label: "Vendor #", Value: "VN" + ticket},
+		},
+		Footer: "05 May 2026",
 	}
 }
 

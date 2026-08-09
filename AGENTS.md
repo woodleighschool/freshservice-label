@@ -13,7 +13,7 @@ Repository guidance for freshservice-label.
 
 - CLI, HTTP server, and preview command: `cmd/freshservice-label`
 - Ticket decoding, rendering, printing, and HTTP behavior: `internal/ticketprinter`
-- Local preview input and output: `preview.json` and `example.png`
+- Local preview command and output: `cmd/preview` and `preview.png`
 
 Keep the request-to-label path explicit. Don't split the single capability into generic transport, template, or job frameworks.
 

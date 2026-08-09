@@ -1,10 +1,8 @@
 # freshservice-label
 
-Small webhook service for printing our Freshservice labels on the Brother QL-820NWB.
+Webhook service that prints Freshservice labels on a Brother QL-820NWB using the fixed landscape layout for 62 mm continuous stock.
 
-Freshservice sends this service a compact JSON payload from an automation. The service queues the webhook in memory, renders the label, prints directly to the Ethernet-connected printer over TCP/9100, then responds to that webhook after the label has printed.
-
-![Example Label](example.png)
+![Example label](example.png)
 
 ## Run
 
@@ -14,62 +12,43 @@ PRINTER_ADDR=172.19.10.13 \
 go run ./cmd/freshservice-label
 ```
 
-The default listen address is `:8080`.
+`LOGO_URL` is optional. When set, the PNG is fetched during startup and held in memory.
 
-## Configuration
+| Variable        | Required | Default |
+| --------------- | -------- | ------- |
+| `WEBHOOK_TOKEN` | yes      |         |
+| `PRINTER_ADDR`  | yes      |         |
+| `LOGO_URL`      | no       | no logo |
+| `LISTEN_ADDR`   | no       | `:8080` |
+| `QUEUE_DEPTH`   | no       | `10`    |
+| `PRINT_TIMEOUT` | no       | `30s`   |
 
-| Variable | Required | Default | Notes |
-| --- | --- | --- | --- |
-| `WEBHOOK_TOKEN` | yes | | Bearer token expected from Freshservice. |
-| `PRINTER_ADDR` | yes | | Printer address, such as `172.19.10.13` or `tcp://172.19.10.13:9100`. |
-| `LISTEN_ADDR` | no | `:8080` | HTTP listen address. |
-| `QUEUE_DEPTH` | no | `10` | In-memory webhook queue depth. Jobs vanish on restart. |
-| `PRINT_TIMEOUT` | no | `30s` | Per-label print timeout. |
+## Webhook
 
-## Webhook Payload
-
-Freshservice can shape the payload, so this app only knows the fields it needs:
+Use an Advanced JSON webhook in Freshservice:
 
 ```json
 {
-  "ticket_url": "https://freshservice.example/a/tickets/12345",
-  "requester_name": "Example Person",
-  "subject": "REPAIR - laptop issue",
-  "created_at": "2026-05-05T02:35:00Z",
-  "compnow_ticket_no": "CN123456"
+    "reference": "{{ticket.id_numeric}}",
+    "qr_url": "{{ticket.url}}",
+    "title": "{{ticket.requester.name}}",
+    "rows": [
+        { "label": "Type", "value": "{{ticket.ticket_type}}" },
+        { "label": "Ticket #", "value": "{{ticket.id_numeric}}" },
+        { "label": "Priority", "value": "{{ticket.priority}}" }
+    ],
+    "footer": "{{ticket.created_at_iso | date: '%d %b %Y'}}"
 }
 ```
 
-`compnow_ticket_no` is optional. The QR code uses `ticket_url`; the printed HelpDesk number is the final path segment of that URL.
-
-Example:
-
-```sh
-curl -X POST http://127.0.0.1:8080/webhook \
-  -H 'Authorization: Bearer secret' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "ticket_url": "https://freshservice.example/a/tickets/12345",
-    "requester_name": "Example Person",
-    "subject": "REPAIR - laptop issue",
-    "created_at": "2026-05-05T02:35:00Z",
-    "compnow_ticket_no": "CN123456"
-  }'
-```
+Rows with an empty or unset `value` are omitted.
 
 ## Development
 
 ```sh
 mise run test
 mise run lint
-```
-
-To preview the label without starting the service or using stock:
-
-```sh
 mise run preview
 ```
 
-This reads `preview.json` and writes `preview.png` in the repo root. Preview mode only renders the PNG; it does not read service env vars or contact the printer.
-
-The label layout lives in commented constants in `internal/ticketprinter/render.go`. Adjust those before reaching for a larger templating system.
+`mise run preview` writes `preview.png` with a logo placeholder without contacting Freshservice or a printer. Set `LOGO_URL` to include deployment branding.

@@ -24,8 +24,8 @@ func main() {
 }
 
 func run(args []string, logger *slog.Logger) error {
-	if len(args) > 1 && args[1] == "preview" {
-		return ticketprinter.RunPreview(args[2:], os.Stdin)
+	if len(args) != 1 {
+		return errors.New("freshservice-label does not accept arguments")
 	}
 
 	cfg, err := ticketprinter.LoadConfig()
@@ -36,8 +36,13 @@ func run(args []string, logger *slog.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	renderer, err := ticketprinter.NewRendererFromURL(ctx, cfg.LogoURL)
+	if err != nil {
+		return fmt.Errorf("initialize renderer: %w", err)
+	}
+
 	printer := ticketprinter.NewBrotherPrinter(cfg.PrinterAddr, cfg.PrintTimeout, logger)
-	app := ticketprinter.NewServer(cfg, printer, logger)
+	app := ticketprinter.NewServer(cfg, renderer, printer, logger)
 	defer app.Close()
 
 	router := chi.NewRouter()

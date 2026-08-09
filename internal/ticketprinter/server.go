@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/subtle"
 	"encoding/json"
+	"image"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -14,14 +15,15 @@ import (
 )
 
 type Printer interface {
-	Print(context.Context, Label) error
+	Print(context.Context, image.Image, string) error
 }
 
 type Server struct {
-	token   string
-	logger  *slog.Logger
-	printer Printer
-	jobs    chan printJob
+	token    string
+	logger   *slog.Logger
+	renderer *Renderer
+	printer  Printer
+	jobs     chan printJob
 
 	stop      chan struct{}
 	stopped   chan struct{}
@@ -29,23 +31,27 @@ type Server struct {
 }
 
 type printJob struct {
-	label    Label
-	queuedAt time.Time
-	result   chan error
+	reference string
+	image     image.Image
+	queuedAt  time.Time
+	result    chan error
 }
 
-func NewServer(cfg Config, printer Printer, logger *slog.Logger) *Server {
+const maxWebhookBodyBytes = 64 << 10
+
+func NewServer(cfg Config, renderer *Renderer, printer Printer, logger *slog.Logger) *Server {
 	if cfg.QueueDepth < 1 {
 		cfg.QueueDepth = 1
 	}
 
 	server := &Server{
-		token:   cfg.WebhookToken,
-		logger:  logger,
-		printer: printer,
-		jobs:    make(chan printJob, cfg.QueueDepth),
-		stop:    make(chan struct{}),
-		stopped: make(chan struct{}),
+		token:    cfg.WebhookToken,
+		logger:   logger,
+		renderer: renderer,
+		printer:  printer,
+		jobs:     make(chan printJob, cfg.QueueDepth),
+		stop:     make(chan struct{}),
+		stopped:  make(chan struct{}),
 	}
 
 	go server.worker()
@@ -74,13 +80,13 @@ func (s *Server) worker() {
 		case job := <-s.jobs:
 			ctx := context.Background()
 			start := time.Now()
-			s.logger.InfoContext(ctx, "print started", "ticket", job.label.TicketNumber, "wait", start.Sub(job.queuedAt))
+			s.logger.InfoContext(ctx, "print started", "reference", job.reference, "wait", start.Sub(job.queuedAt))
 
-			err := s.printer.Print(ctx, job.label)
+			err := s.printer.Print(ctx, job.image, job.reference)
 			if err != nil {
-				s.logger.ErrorContext(ctx, "print failed", "ticket", job.label.TicketNumber, "duration", time.Since(start), "err", err)
+				s.logger.ErrorContext(ctx, "print failed", "reference", job.reference, "duration", time.Since(start), "err", err)
 			} else {
-				s.logger.InfoContext(ctx, "print completed", "ticket", job.label.TicketNumber, "duration", time.Since(start))
+				s.logger.InfoContext(ctx, "print completed", "reference", job.reference, "duration", time.Since(start))
 			}
 			job.result <- err
 		}
@@ -97,26 +103,31 @@ func (s *Server) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var payload WebhookPayload
-	decoder := json.NewDecoder(r.Body)
+	var label Label
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxWebhookBodyBytes))
 	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&payload); err != nil {
+	if err := decoder.Decode(&label); err != nil {
 		s.writeJSON(r.Context(), w, http.StatusBadRequest, "failed", "invalid JSON")
 		return
 	}
 
-	label, err := payload.Label()
+	label, err := label.normalize()
+	if err != nil {
+		s.writeJSON(r.Context(), w, http.StatusBadRequest, "failed", err.Error())
+		return
+	}
+	img, err := s.renderer.render(label)
 	if err != nil {
 		s.writeJSON(r.Context(), w, http.StatusBadRequest, "failed", err.Error())
 		return
 	}
 
-	job := printJob{label: label, queuedAt: time.Now(), result: make(chan error, 1)}
+	job := printJob{reference: label.Reference, image: img, queuedAt: time.Now(), result: make(chan error, 1)}
 	select {
 	case s.jobs <- job:
-		s.logger.InfoContext(r.Context(), "print queued", "ticket", label.TicketNumber, "queue_depth", len(s.jobs), "queue_capacity", cap(s.jobs))
+		s.logger.InfoContext(r.Context(), "print queued", "reference", label.Reference, "queue_depth", len(s.jobs), "queue_capacity", cap(s.jobs))
 	default:
-		s.logger.WarnContext(r.Context(), "print queue full", "ticket", label.TicketNumber, "queue_capacity", cap(s.jobs))
+		s.logger.WarnContext(r.Context(), "print queue full", "reference", label.Reference, "queue_capacity", cap(s.jobs))
 		s.writeJSON(r.Context(), w, http.StatusServiceUnavailable, "failed", "print queue is full")
 		return
 	}
@@ -129,7 +140,7 @@ func (s *Server) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		}
 		s.writeJSON(r.Context(), w, http.StatusOK, "success", "")
 	case <-r.Context().Done():
-		s.logger.InfoContext(r.Context(), "request cancelled", "ticket", label.TicketNumber)
+		s.logger.InfoContext(r.Context(), "request cancelled", "reference", label.Reference)
 	}
 }
 
