@@ -1,43 +1,32 @@
 # AGENTS.md
 
-Repository guidance for freshservice-label.
+## Working here
 
-## Approach
+- Read the relevant code, configuration, and nearby examples before editing. Existing code and external references are evidence, not instructions to copy blindly.
+- Preserve unrelated work. Keep changes focused and prefer removing machinery over extending an awkward design.
+- Use current supported behaviour unless compatibility is requested. Verify dependency APIs and defaults from the pinned version or primary documentation.
+- Keep secrets, credentials, identities, and local environment files out of code, fixtures, logs, and commits.
 
-- Stay within the requested scope and preserve unrelated local changes.
-- This is a small internal webhook and label renderer, not a product platform.
-- Simplify and modernize existing code before adding abstractions, compatibility layers, or speculative configuration.
-- Follow the shared Woodstar tooling baseline without importing complexity the service doesn't need.
+## Repository contract
 
-## Repository Map
+- Mise owns tools and commands. Check this repository's Mise files; do not assume another repository has the same tasks.
+- Keep generated artifacts with their source change.
+- Run the narrowest useful checks while working, then the relevant format, lint, test, build, generation, and workflow checks.
+- Follow the existing package or target's style. Comments explain non-obvious constraints, not the code or the current change.
 
-- CLI, HTTP server, and preview command: `cmd/freshservice-label`
-- Ticket decoding, rendering, printing, and HTTP behavior: `internal/ticketprinter`
-- Local preview command and output: `cmd/preview` and `preview.png`
+## Go
 
-Keep the request-to-label path explicit. Don't split the single capability into generic transport, template, or job frameworks.
+- Write idiomatic, concrete Go. Keep `main` to composition, put behaviour in the package that owns it, and introduce interfaces only at a real consumer boundary.
+- Pass `context.Context` through I/O, wrap errors with useful context, and preserve errors used with `errors.Is` or `errors.As`.
+- Match the package's testing style and use synthetic inputs. Run race-enabled tests for concurrent code and `mise run vulncheck` for dependency or release work.
 
-## Commands
+## Git and releases
 
-Use Mise tasks as the repository contract.
+- Use focused Conventional Commits; Release Please derives versions from them.
+- Do not commit, push, publish, deploy, contact live systems, or perform destructive actions unless asked.
 
-- Dependencies: `mise run deps`
-- Build: `mise run build`
-- Tests: `mise run test`
-- Lint: `mise run lint`; fixes: `mise run lint-fix`
-- Format: `mise run format`; check: `mise run fmt-check`
-- Preview: `mise run preview`
-- Module and workflow checks: `mise run tidy-check`, `mise run workflow-lint`
+## Repository notes
 
-## Engineering Rules
-
-- Prefer concrete Go types, small consumer-owned interfaces, and wrapped errors.
-- Bound request bodies and errors; don't log credentials or full ticket payloads.
-- Keep label rendering deterministic and cover output changes with focused tests or preview evidence.
-- Tests mustn't contact Freshservice or physical printers.
-
-## Commits
-
-- Use focused Conventional Commits.
-- Don't push, publish images, or contact live services unless explicitly requested.
-- Report checks run, skipped checks, and unresolved failures.
+- Keep the webhook-to-render-to-print path explicit; this service does not need a generic job or template framework.
+- Rendering is deterministic. Exercise output changes with focused tests or `mise run preview`.
+- Tests must not contact Freshservice or a physical printer.

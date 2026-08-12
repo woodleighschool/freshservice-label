@@ -1,31 +1,35 @@
 # freshservice-label
 
-Webhook service that prints Freshservice labels on a Brother QL-820NWB using the fixed landscape layout for 62 mm continuous stock.
+Webhook service for printing Freshservice tickets on a Brother QL-820NWB. Labels use a fixed landscape layout for 62 mm continuous stock, and print jobs are queued in memory.
 
 ![Example label](example.png)
 
-## Run
+## 🚀 Usage
 
-```sh
+Set the required values and start the service:
+
+```bash
 WEBHOOK_TOKEN=secret \
-PRINTER_ADDR=172.19.10.13 \
+PRINTER_ADDR=192.0.2.20 \
 go run ./cmd/freshservice-label
 ```
 
-`LOGO_URL` is optional. When set, the PNG is fetched during startup and held in memory.
+Send an Advanced JSON webhook from Freshservice to `/webhook` with `Authorization: Bearer <WEBHOOK_TOKEN>`.
+
+## ⚙️ Configuration
 
 | Variable        | Required | Default |
 | --------------- | -------- | ------- |
-| `WEBHOOK_TOKEN` | yes      |         |
-| `PRINTER_ADDR`  | yes      |         |
-| `LOGO_URL`      | no       | no logo |
-| `LISTEN_ADDR`   | no       | `:8080` |
-| `QUEUE_DEPTH`   | no       | `10`    |
-| `PRINT_TIMEOUT` | no       | `30s`   |
+| `WEBHOOK_TOKEN` | Yes      |         |
+| `PRINTER_ADDR`  | Yes      |         |
+| `LOGO_URL`      | No       | No logo |
+| `LISTEN_ADDR`   | No       | `:8080` |
+| `QUEUE_DEPTH`   | No       | `10`    |
+| `PRINT_TIMEOUT` | No       | `30s`   |
 
-## Webhook
+When `LOGO_URL` is set, the PNG is fetched once during startup and kept in memory.
 
-Use an Advanced JSON webhook in Freshservice:
+## 🪝 Webhook
 
 ```json
 {
@@ -41,14 +45,18 @@ Use an Advanced JSON webhook in Freshservice:
 }
 ```
 
-Rows with an empty or unset `value` are omitted.
+Rows with an empty or missing `value` are omitted.
 
-## Development
+## 🧑‍💻 Development
 
-```sh
+```bash
 mise run test
 mise run lint
 mise run preview
 ```
 
-`mise run preview` writes `preview.png` with a logo placeholder without contacting Freshservice or a printer. Set `LOGO_URL` to include deployment branding.
+`mise run preview` writes `preview.png` without contacting Freshservice or a printer. Set `LOGO_URL` to include deployment branding.
+
+## 📄 License
+
+Licensed under the [Apache License 2.0](LICENSE).
