@@ -57,8 +57,7 @@ func fetchLogo(ctx context.Context, rawLogoURL string) (image.Image, error) {
 	}
 	response, err := client.Do(request)
 	if err != nil {
-		var urlError *url.Error
-		if errors.As(err, &urlError) {
+		if urlError, ok := errors.AsType[*url.Error](err); ok {
 			err = urlError.Err
 		}
 		return nil, fmt.Errorf("fetch logo: %w", err)
