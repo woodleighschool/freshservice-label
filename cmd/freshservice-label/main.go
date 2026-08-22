@@ -19,14 +19,14 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 	if err := run(os.Args, logger); err != nil {
-		logger.Error("freshservice-label failed", "err", err)
+		logger.Error("server failed", "err", err)
 		os.Exit(1)
 	}
 }
 
 func run(args []string, logger *slog.Logger) error {
 	if len(args) != 1 {
-		return errors.New("freshservice-label does not accept arguments")
+		return errors.New("arguments are not supported")
 	}
 
 	cfg, err := ticketprinter.LoadConfig()
@@ -57,7 +57,7 @@ func run(args []string, logger *slog.Logger) error {
 
 	errCh := make(chan error, 1)
 	go func() {
-		logger.InfoContext(ctx, "freshservice-label listening", "addr", cfg.ListenAddr)
+		logger.InfoContext(ctx, "server listening", "addr", cfg.ListenAddr)
 		errCh <- httpServer.ListenAndServe()
 	}()
 
