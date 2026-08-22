@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"flag"
 	"fmt"
 	"image"
 	"image/color"
@@ -11,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/spf13/pflag"
 	"github.com/woodleighschool/freshservice-label/internal/ticketprinter"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
@@ -25,8 +25,9 @@ func main() {
 }
 
 func run(args []string) error {
-	flags := flag.NewFlagSet("preview", flag.ContinueOnError)
+	flags := pflag.NewFlagSet("preview", pflag.ContinueOnError)
 	output := flags.String("output", "preview.png", "output PNG path")
+	logoURL := flags.String("logo-url", strings.TrimSpace(os.Getenv("LOGO_URL")), "logo image URL (defaults to LOGO_URL)")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
@@ -35,8 +36,8 @@ func run(args []string) error {
 	}
 
 	renderer := ticketprinter.NewRenderer(placeholderLogo())
-	if logoURL := strings.TrimSpace(os.Getenv("LOGO_URL")); logoURL != "" {
-		brandedRenderer, err := ticketprinter.NewRendererFromURL(context.Background(), logoURL)
+	if *logoURL != "" {
+		brandedRenderer, err := ticketprinter.NewRendererFromURL(context.Background(), *logoURL)
 		if err != nil {
 			return err
 		}

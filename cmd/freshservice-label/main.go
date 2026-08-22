@@ -16,7 +16,8 @@ import (
 )
 
 func main() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
 	if err := run(os.Args, logger); err != nil {
 		logger.Error("freshservice-label failed", "err", err)
 		os.Exit(1)
@@ -62,6 +63,7 @@ func run(args []string, logger *slog.Logger) error {
 
 	select {
 	case <-ctx.Done():
+		stop()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		return httpServer.Shutdown(shutdownCtx)

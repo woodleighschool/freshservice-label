@@ -3,59 +3,34 @@ package ticketprinter
 import (
 	"errors"
 	"fmt"
-	"os"
-	"strconv"
 	"time"
+
+	"github.com/caarlos0/env/v11"
 )
 
+// Config contains the service's environment-derived configuration.
 type Config struct {
-	ListenAddr   string
-	WebhookToken string
-	PrinterAddr  string
-	LogoURL      string
-	QueueDepth   int
-	PrintTimeout time.Duration
+	ListenAddr   string        `env:"LISTEN_ADDR"   envDefault:":8080"`
+	WebhookToken string        `env:"WEBHOOK_TOKEN,required,notEmpty"`
+	PrinterAddr  string        `env:"PRINTER_ADDR,required,notEmpty"`
+	LogoURL      string        `env:"LOGO_URL"`
+	QueueDepth   int           `env:"QUEUE_DEPTH"   envDefault:"10"`
+	PrintTimeout time.Duration `env:"PRINT_TIMEOUT" envDefault:"30s"`
 }
 
+// LoadConfig parses and validates configuration from the environment.
 func LoadConfig() (Config, error) {
-	cfg := Config{
-		ListenAddr:   env("LISTEN_ADDR", ":8080"),
-		WebhookToken: os.Getenv("WEBHOOK_TOKEN"),
-		PrinterAddr:  os.Getenv("PRINTER_ADDR"),
-		LogoURL:      os.Getenv("LOGO_URL"),
-		QueueDepth:   10,
-		PrintTimeout: 30 * time.Second,
+	cfg, err := env.ParseAs[Config]()
+	if err != nil {
+		return Config{}, fmt.Errorf("parse environment: %w", err)
 	}
 
-	if cfg.WebhookToken == "" {
-		return Config{}, errors.New("WEBHOOK_TOKEN is required")
+	if cfg.QueueDepth < 1 {
+		return Config{}, errors.New("QUEUE_DEPTH must be a positive integer")
 	}
-	if cfg.PrinterAddr == "" {
-		return Config{}, errors.New("PRINTER_ADDR is required")
-	}
-
-	if v := os.Getenv("QUEUE_DEPTH"); v != "" {
-		queueDepth, err := strconv.Atoi(v)
-		if err != nil || queueDepth < 1 {
-			return Config{}, fmt.Errorf("QUEUE_DEPTH must be a positive integer")
-		}
-		cfg.QueueDepth = queueDepth
-	}
-
-	if v := os.Getenv("PRINT_TIMEOUT"); v != "" {
-		printTimeout, err := time.ParseDuration(v)
-		if err != nil || printTimeout <= 0 {
-			return Config{}, fmt.Errorf("PRINT_TIMEOUT must be a positive duration")
-		}
-		cfg.PrintTimeout = printTimeout
+	if cfg.PrintTimeout <= 0 {
+		return Config{}, errors.New("PRINT_TIMEOUT must be a positive duration")
 	}
 
 	return cfg, nil
-}
-
-func env(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return fallback
 }
