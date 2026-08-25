@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.1](https://github.com/woodleighschool/freshservice-label/compare/0.2.0...0.2.1) (2026-08-25)
+
+
+### Code Refactoring
+
+* namespace runtime configuration ([310abb6](https://github.com/woodleighschool/freshservice-label/commit/310abb61bbf1aed40c4ae3951c353f854d73deba))
+
+
+### Miscellaneous Chores
+
+* **mise:** update tool oxfmt (0.64.0 → 0.65.0) ([#24](https://github.com/woodleighschool/freshservice-label/issues/24)) ([b7d2bb1](https://github.com/woodleighschool/freshservice-label/commit/b7d2bb1558e039227253e6bc2835492f6aacce76))
+
 ## [0.2.0](https://github.com/woodleighschool/freshservice-label/compare/0.1.3...0.2.0) (2026-08-24)
 
 
