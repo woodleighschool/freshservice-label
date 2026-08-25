@@ -6,8 +6,8 @@ import (
 )
 
 func TestLoadConfig(t *testing.T) {
-	t.Setenv("WEBHOOK_TOKEN", "secret")
-	t.Setenv("PRINTER_ADDR", "tcp://printer.example:9100")
+	t.Setenv("FRESHSERVICE_LABEL_WEBHOOK_TOKEN", "secret")
+	t.Setenv("FRESHSERVICE_LABEL_PRINTER_ADDR", "tcp://printer.example:9100")
 
 	cfg, err := LoadConfig()
 	if err != nil {
@@ -36,21 +36,21 @@ func TestLoadConfigRejectsInvalidEnvironment(t *testing.T) {
 		key   string
 		value string
 	}{
-		"empty webhook token": {key: "WEBHOOK_TOKEN", value: ""},
+		"empty webhook token": {key: "FRESHSERVICE_LABEL_WEBHOOK_TOKEN", value: ""},
 		"empty printer address": {
-			key:   "PRINTER_ADDR",
+			key:   "FRESHSERVICE_LABEL_PRINTER_ADDR",
 			value: "",
 		},
-		"non-numeric queue depth": {key: "QUEUE_DEPTH", value: "many"},
-		"zero queue depth":        {key: "QUEUE_DEPTH", value: "0"},
-		"invalid print timeout":   {key: "PRINT_TIMEOUT", value: "soon"},
-		"zero print timeout":      {key: "PRINT_TIMEOUT", value: "0s"},
+		"non-numeric queue depth": {key: "FRESHSERVICE_LABEL_QUEUE_DEPTH", value: "many"},
+		"zero queue depth":        {key: "FRESHSERVICE_LABEL_QUEUE_DEPTH", value: "0"},
+		"invalid print timeout":   {key: "FRESHSERVICE_LABEL_PRINT_TIMEOUT", value: "soon"},
+		"zero print timeout":      {key: "FRESHSERVICE_LABEL_PRINT_TIMEOUT", value: "0s"},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			t.Setenv("WEBHOOK_TOKEN", "secret")
-			t.Setenv("PRINTER_ADDR", "tcp://printer.example:9100")
+			t.Setenv("FRESHSERVICE_LABEL_WEBHOOK_TOKEN", "secret")
+			t.Setenv("FRESHSERVICE_LABEL_PRINTER_ADDR", "tcp://printer.example:9100")
 			t.Setenv(test.key, test.value)
 
 			if _, err := LoadConfig(); err == nil {

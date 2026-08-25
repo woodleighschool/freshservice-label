@@ -9,39 +9,39 @@ Webhook service for printing Freshservice tickets on a Brother QL-820NWB. Labels
 Set the required values and start the service:
 
 ```bash
-WEBHOOK_TOKEN=secret \
-PRINTER_ADDR=192.0.2.20 \
+FRESHSERVICE_LABEL_WEBHOOK_TOKEN=secret \
+FRESHSERVICE_LABEL_PRINTER_ADDR=192.0.2.20 \
 go run ./cmd/freshservice-label
 ```
 
-Send an Advanced JSON webhook from Freshservice to `/webhook` with `Authorization: Bearer <WEBHOOK_TOKEN>`.
+Send an Advanced JSON webhook from Freshservice to `/webhook` with `Authorization: Bearer <FRESHSERVICE_LABEL_WEBHOOK_TOKEN>`.
 
 ## ⚙️ Configuration
 
-| Variable        | Required | Default |
-| --------------- | -------- | ------- |
-| `WEBHOOK_TOKEN` | Yes      |         |
-| `PRINTER_ADDR`  | Yes      |         |
-| `LOGO_URL`      | No       | No logo |
-| `LISTEN_ADDR`   | No       | `:8080` |
-| `QUEUE_DEPTH`   | No       | `10`    |
-| `PRINT_TIMEOUT` | No       | `30s`   |
+| Variable                           | Required | Default |
+| ---------------------------------- | -------- | ------- |
+| `FRESHSERVICE_LABEL_WEBHOOK_TOKEN` | Yes      |         |
+| `FRESHSERVICE_LABEL_PRINTER_ADDR`  | Yes      |         |
+| `FRESHSERVICE_LABEL_LOGO_URL`      | No       | No logo |
+| `FRESHSERVICE_LABEL_LISTEN_ADDR`   | No       | `:8080` |
+| `FRESHSERVICE_LABEL_QUEUE_DEPTH`   | No       | `10`    |
+| `FRESHSERVICE_LABEL_PRINT_TIMEOUT` | No       | `30s`   |
 
-When `LOGO_URL` is set, the PNG is fetched once during startup and kept in memory.
+When `FRESHSERVICE_LABEL_LOGO_URL` is set, the PNG is fetched once during startup and kept in memory.
 
 ## 🪝 Webhook
 
 ```json
 {
-    "reference": "{{ticket.id_numeric}}",
-    "qr_url": "{{ticket.url}}",
-    "title": "{{ticket.requester.name}}",
-    "rows": [
-        { "label": "Type", "value": "{{ticket.ticket_type}}" },
-        { "label": "Ticket #", "value": "{{ticket.id_numeric}}" },
-        { "label": "Priority", "value": "{{ticket.priority}}" }
-    ],
-    "footer": "{{ticket.created_at_iso | date: '%d %b %Y'}}"
+  "reference": "{{ticket.id_numeric}}",
+  "qr_url": "{{ticket.url}}",
+  "title": "{{ticket.requester.name}}",
+  "rows": [
+    { "label": "Type", "value": "{{ticket.ticket_type}}" },
+    { "label": "Ticket #", "value": "{{ticket.id_numeric}}" },
+    { "label": "Priority", "value": "{{ticket.priority}}" }
+  ],
+  "footer": "{{ticket.created_at_iso | date: '%d %b %Y'}}"
 }
 ```
 
@@ -55,7 +55,7 @@ mise run lint
 mise run preview
 ```
 
-`mise run preview` writes `preview.png` without contacting Freshservice or a printer. Set `LOGO_URL` to include deployment branding.
+`mise run preview` writes `preview.png` without contacting Freshservice or a printer. Set `FRESHSERVICE_LABEL_LOGO_URL` to include deployment branding.
 
 ## 📄 License
 

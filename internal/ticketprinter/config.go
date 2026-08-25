@@ -20,16 +20,16 @@ type Config struct {
 
 // LoadConfig parses and validates configuration from the environment.
 func LoadConfig() (Config, error) {
-	cfg, err := env.ParseAs[Config]()
-	if err != nil {
+	var cfg Config
+	if err := env.ParseWithOptions(&cfg, env.Options{Prefix: "FRESHSERVICE_LABEL_"}); err != nil {
 		return Config{}, fmt.Errorf("parse environment: %w", err)
 	}
 
 	if cfg.QueueDepth < 1 {
-		return Config{}, errors.New("QUEUE_DEPTH must be a positive integer")
+		return Config{}, errors.New("FRESHSERVICE_LABEL_QUEUE_DEPTH must be a positive integer")
 	}
 	if cfg.PrintTimeout <= 0 {
-		return Config{}, errors.New("PRINT_TIMEOUT must be a positive duration")
+		return Config{}, errors.New("FRESHSERVICE_LABEL_PRINT_TIMEOUT must be a positive duration")
 	}
 
 	return cfg, nil
