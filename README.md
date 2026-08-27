@@ -1,17 +1,31 @@
 # freshservice-label
 
+[![Release](https://img.shields.io/github/v/release/woodleighschool/freshservice-label?display_name=tag&sort=semver)](https://github.com/woodleighschool/freshservice-label/releases/latest)
+[![CI](https://github.com/woodleighschool/freshservice-label/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/woodleighschool/freshservice-label/actions/workflows/ci.yaml)
+[![Go](https://img.shields.io/github/go-mod/go-version/woodleighschool/freshservice-label?logo=go)](https://github.com/woodleighschool/freshservice-label/blob/main/go.mod)
+[![Container](https://img.shields.io/badge/container-ghcr.io-2496ED?logo=github&logoColor=white)](https://github.com/orgs/woodleighschool/packages/container/package/freshservice-label)
+[![License](https://img.shields.io/github/license/woodleighschool/freshservice-label)](https://github.com/woodleighschool/freshservice-label/blob/main/LICENSE)
+
 Webhook service for printing Freshservice tickets on a Brother QL-820NWB. Labels use a fixed landscape layout for 62 mm continuous stock, and print jobs are queued in memory.
 
 ![Example label](example.png)
 
 ## 🚀 Usage
 
-Set the required values and start the service:
+Create `.env` with the webhook secret and printer address:
+
+```dotenv
+FRESHSERVICE_LABEL_WEBHOOK_TOKEN=change-me
+FRESHSERVICE_LABEL_PRINTER_ADDR=192.0.2.20
+```
+
+A container is published with each [release](https://github.com/woodleighschool/freshservice-label/releases/latest):
 
 ```bash
-FRESHSERVICE_LABEL_WEBHOOK_TOKEN=secret \
-FRESHSERVICE_LABEL_PRINTER_ADDR=192.0.2.20 \
-go run ./cmd/freshservice-label
+docker run --rm \
+  --env-file .env \
+  --publish 8080:8080 \
+  ghcr.io/woodleighschool/freshservice-label:rolling
 ```
 
 Send an Advanced JSON webhook from Freshservice to `/webhook` with `Authorization: Bearer <FRESHSERVICE_LABEL_WEBHOOK_TOKEN>`.
@@ -49,13 +63,23 @@ Rows with an empty or missing `value` are omitted.
 
 ## 🧑‍💻 Development
 
+Run the current checkout with the same environment values:
+
+```bash
+FRESHSERVICE_LABEL_WEBHOOK_TOKEN=secret \
+FRESHSERVICE_LABEL_PRINTER_ADDR=192.0.2.20 \
+go run ./cmd/freshservice-label
+```
+
+Repository checks:
+
 ```bash
 mise run test
 mise run lint
 mise run preview
 ```
 
-`mise run preview` writes `preview.png` without contacting Freshservice or a printer. Set `FRESHSERVICE_LABEL_LOGO_URL` to include deployment branding.
+`mise run preview` writes `preview.png` without contacting Freshservice or a printer. Set `FRESHSERVICE_LABEL_LOGO_URL` to render a logo.
 
 ## 📄 License
 
