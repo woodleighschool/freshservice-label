@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.2.2](https://github.com/woodleighschool/freshservice-label/compare/0.2.1...0.2.2) (2026-09-10)
+
+
+### Features
+
+* **go:** update module golang.org/x/image (v0.45.0 → v0.46.0) ([#33](https://github.com/woodleighschool/freshservice-label/issues/33)) ([7ced928](https://github.com/woodleighschool/freshservice-label/commit/7ced92815c0896b294e14e0e059bdea74bda0597))
+
+
+### Bug Fixes
+
+* **container:** update image golang (1.27.0 → 1.27.1) ([#30](https://github.com/woodleighschool/freshservice-label/issues/30)) ([c0cd4e3](https://github.com/woodleighschool/freshservice-label/commit/c0cd4e3038f59dfcff311c41098202cffbd8e8ec))
+* **go:** update module github.com/suapapa/go_brother-ql (v0.2.1 → v0.2.2) ([#35](https://github.com/woodleighschool/freshservice-label/issues/35)) ([ff900f9](https://github.com/woodleighschool/freshservice-label/commit/ff900f9f77f83f745e41a4499ecc8ff32a478e3e))
+
+
+### Documentation
+
+* clarify usage and releases ([e3c7a0b](https://github.com/woodleighschool/freshservice-label/commit/e3c7a0b344a6acac5e6d40af28c6a093ae02537b))
+
+
+### Continuous Integration
+
+* **github-action:** update action jdx/mise-action (v4.2.5 → v4.3.0) ([#27](https://github.com/woodleighschool/freshservice-label/issues/27)) ([88e4a4d](https://github.com/woodleighschool/freshservice-label/commit/88e4a4d4006bc26bc1cc0de3c3846602aa8fce65))
+* skip release metadata checks and name Go jobs ([ceb2a66](https://github.com/woodleighschool/freshservice-label/commit/ceb2a66386dbe987b6bd8fa1eeff751f6cc2d8c9))
+
+
+### Miscellaneous Chores
+
+* bump deps ([449d955](https://github.com/woodleighschool/freshservice-label/commit/449d955210d51d8b5701444132f90aa9720261c4))
+* fresh mise lock ([8c593e5](https://github.com/woodleighschool/freshservice-label/commit/8c593e5deb05e14a82d344eef71e360ebec0a9dc))
+* **mise:** update go toolchain ([#28](https://github.com/woodleighschool/freshservice-label/issues/28)) ([d015d71](https://github.com/woodleighschool/freshservice-label/commit/d015d7178b6de6a3816f4bda0b776c169e85b189))
+* **mise:** update tool go:golang.org/x/vuln/cmd/govulncheck (1.7.0 → v1.8.0) ([#34](https://github.com/woodleighschool/freshservice-label/issues/34)) ([24d9a9f](https://github.com/woodleighschool/freshservice-label/commit/24d9a9f4fe806816e1563196d8a04ab8309df42e))
+* **mise:** update tool lefthook (2.1.11 → 2.1.12) ([#29](https://github.com/woodleighschool/freshservice-label/issues/29)) ([e87f174](https://github.com/woodleighschool/freshservice-label/commit/e87f17410f6d94e31c7fbd46cda62d5fb0147677))
+* **mise:** update tool oxfmt (0.65.0 → 0.66.0) ([#32](https://github.com/woodleighschool/freshservice-label/issues/32)) ([586de85](https://github.com/woodleighschool/freshservice-label/commit/586de8584fe196ce8198082d28b65cd067bd4f80))
+* **mise:** update tool zizmor (1.29.0 → 1.30.0) ([#31](https://github.com/woodleighschool/freshservice-label/issues/31)) ([bc35d95](https://github.com/woodleighschool/freshservice-label/commit/bc35d95964c68c9f58b102848f2d745b7c93ca9c))
+* remove redundant workflow lint task ([870af80](https://github.com/woodleighschool/freshservice-label/commit/870af80dce47eeead50c870f5db0b6a7b5fc47b6))
+
 ## [0.2.1](https://github.com/woodleighschool/freshservice-label/compare/0.2.0...0.2.1) (2026-08-25)
 
 
