@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.3](https://github.com/woodleighschool/freshservice-label/compare/0.2.2...0.2.3) (2026-09-17)
+
+
+### Miscellaneous Chores
+
+* **mise:** update tool lefthook (2.1.12 → 2.1.14) ([#36](https://github.com/woodleighschool/freshservice-label/issues/36)) ([108518e](https://github.com/woodleighschool/freshservice-label/commit/108518e15324520390dc11517c4e3c7223519b44))
+* **mise:** update tool oxfmt (0.67.0 → 0.68.0) ([#38](https://github.com/woodleighschool/freshservice-label/issues/38)) ([e564e63](https://github.com/woodleighschool/freshservice-label/commit/e564e63348d944e6b07e340fb6f16c6cd77b1fe1))
+
 ## [0.2.2](https://github.com/woodleighschool/freshservice-label/compare/0.2.1...0.2.2) (2026-09-10)
 
 
