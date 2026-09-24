@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.3](https://github.com/woodleighschool/freshservice-label/compare/0.2.2...0.2.3) (2026-09-24)
+
+
+### Miscellaneous Chores
+
+* **github-action:** Update action home-operations/.github/actions/workflow-lint (v1.0.3 → v1.0.4) ([#40](https://github.com/woodleighschool/freshservice-label/issues/40)) ([e87127d](https://github.com/woodleighschool/freshservice-label/commit/e87127d7e345a3a9e0fb01578e84ae86f6242800))
+* **github-action:** update action ubuntu (24.04 → 26.04) ([#39](https://github.com/woodleighschool/freshservice-label/issues/39)) ([3b42138](https://github.com/woodleighschool/freshservice-label/commit/3b421388b2e247e7a1297ad644b878ee495cb29d))
+* **mise:** update tool lefthook (2.1.12 → 2.1.14) ([#36](https://github.com/woodleighschool/freshservice-label/issues/36)) ([108518e](https://github.com/woodleighschool/freshservice-label/commit/108518e15324520390dc11517c4e3c7223519b44))
+* **mise:** update tool npm:@commitlint/cli (21.2.2 → 21.2.3) ([#41](https://github.com/woodleighschool/freshservice-label/issues/41)) ([b6185b3](https://github.com/woodleighschool/freshservice-label/commit/b6185b3ffebbac172e0871b9fee7d3e1009e0541))
+* **mise:** update tool oxfmt (0.67.0 → 0.68.0) ([#38](https://github.com/woodleighschool/freshservice-label/issues/38)) ([e564e63](https://github.com/woodleighschool/freshservice-label/commit/e564e63348d944e6b07e340fb6f16c6cd77b1fe1))
+* **mise:** update tool oxfmt (0.68.0 → 0.69.0) ([#42](https://github.com/woodleighschool/freshservice-label/issues/42)) ([53c15a8](https://github.com/woodleighschool/freshservice-label/commit/53c15a87b69403b0cc2d5220d41148b250225bee))
+* **mise:** update tool oxfmt (0.69.0 → 0.70.0) ([#43](https://github.com/woodleighschool/freshservice-label/issues/43)) ([47ac065](https://github.com/woodleighschool/freshservice-label/commit/47ac065f51b9aec28cb21fec7f3d24549140f0cc))
+
 ## [0.2.2](https://github.com/woodleighschool/freshservice-label/compare/0.2.1...0.2.2) (2026-09-10)
 
 
