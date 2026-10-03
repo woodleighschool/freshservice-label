@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.2.3](https://github.com/woodleighschool/freshservice-label/compare/0.2.2...0.2.3) (2026-10-03)
+
+
+### Continuous Integration
+
+* start renovate and release please runs in .github ([773deac](https://github.com/woodleighschool/freshservice-label/commit/773deac77ac84109f9061b08e1a91eca97a453a3))
+
+
+### Miscellaneous Chores
+
+* align formatter ignores and rebuild tool locks ([ef70701](https://github.com/woodleighschool/freshservice-label/commit/ef707013167b3cc3d81adce951b5126392cdf84e))
+* **github-action:** Update action home-operations/.github/actions/workflow-lint (v1.0.3 → v1.0.4) ([#40](https://github.com/woodleighschool/freshservice-label/issues/40)) ([e87127d](https://github.com/woodleighschool/freshservice-label/commit/e87127d7e345a3a9e0fb01578e84ae86f6242800))
+* **github-action:** update action jdx/mise-action (v4.3.0 → v5.0.0) ([#49](https://github.com/woodleighschool/freshservice-label/issues/49)) ([cf5397d](https://github.com/woodleighschool/freshservice-label/commit/cf5397d1e5afbdec8ffc21c2069b9ac7fe352330))
+* **github-action:** update action ubuntu (24.04 → 26.04) ([#39](https://github.com/woodleighschool/freshservice-label/issues/39)) ([3b42138](https://github.com/woodleighschool/freshservice-label/commit/3b421388b2e247e7a1297ad644b878ee495cb29d))
+* include dependency licenses in release artifacts ([ff5c526](https://github.com/woodleighschool/freshservice-label/commit/ff5c526ff3b6351d7889455bc40a32e3c1240074))
+* **mise:** lock file maintenance tool (mise) ([#45](https://github.com/woodleighschool/freshservice-label/issues/45)) ([3ef6d1d](https://github.com/woodleighschool/freshservice-label/commit/3ef6d1d7292761940abfac858efd5b1e2af473e8))
+* **mise:** lock file maintenance tool (mise) ([#46](https://github.com/woodleighschool/freshservice-label/issues/46)) ([ba6fb4e](https://github.com/woodleighschool/freshservice-label/commit/ba6fb4e128ef2f61757d4d8c668221a7aaff9292))
+* **mise:** lock file maintenance tool (mise) ([#47](https://github.com/woodleighschool/freshservice-label/issues/47)) ([73d0cbe](https://github.com/woodleighschool/freshservice-label/commit/73d0cbe3c9a230d4696f729d274fdab606700ea6))
+* **mise:** update tool golangci-lint (2.13.2 → 2.14.0) ([#44](https://github.com/woodleighschool/freshservice-label/issues/44)) ([2a9d3a4](https://github.com/woodleighschool/freshservice-label/commit/2a9d3a446864a06c58ad7bb83730c70d3bed33c2))
+* **mise:** update tool lefthook (2.1.12 → 2.1.14) ([#36](https://github.com/woodleighschool/freshservice-label/issues/36)) ([108518e](https://github.com/woodleighschool/freshservice-label/commit/108518e15324520390dc11517c4e3c7223519b44))
+* **mise:** update tool lefthook (2.1.14 → 2.1.15) ([#50](https://github.com/woodleighschool/freshservice-label/issues/50)) ([45c20f7](https://github.com/woodleighschool/freshservice-label/commit/45c20f7603d6111f76cefd76825369dd44343d70))
+* **mise:** update tool npm:@commitlint/cli (21.2.2 → 21.2.3) ([#41](https://github.com/woodleighschool/freshservice-label/issues/41)) ([b6185b3](https://github.com/woodleighschool/freshservice-label/commit/b6185b3ffebbac172e0871b9fee7d3e1009e0541))
+* **mise:** update tool oxfmt (0.67.0 → 0.68.0) ([#38](https://github.com/woodleighschool/freshservice-label/issues/38)) ([e564e63](https://github.com/woodleighschool/freshservice-label/commit/e564e63348d944e6b07e340fb6f16c6cd77b1fe1))
+* **mise:** update tool oxfmt (0.68.0 → 0.69.0) ([#42](https://github.com/woodleighschool/freshservice-label/issues/42)) ([53c15a8](https://github.com/woodleighschool/freshservice-label/commit/53c15a87b69403b0cc2d5220d41148b250225bee))
+* **mise:** update tool oxfmt (0.69.0 → 0.70.0) ([#43](https://github.com/woodleighschool/freshservice-label/issues/43)) ([47ac065](https://github.com/woodleighschool/freshservice-label/commit/47ac065f51b9aec28cb21fec7f3d24549140f0cc))
+* **mise:** update tool oxfmt (0.70.0 → 0.71.0) ([#48](https://github.com/woodleighschool/freshservice-label/issues/48)) ([036f7a9](https://github.com/woodleighschool/freshservice-label/commit/036f7a903d53d4d4aad3956a9e801579b97d314e))
+
 ## [0.2.2](https://github.com/woodleighschool/freshservice-label/compare/0.2.1...0.2.2) (2026-09-10)
 
 
