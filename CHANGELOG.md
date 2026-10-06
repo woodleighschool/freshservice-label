@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.2](https://github.com/woodleighschool/freshservice-label/compare/0.2.1...0.2.2) (2026-09-10)
+## [0.2.2](https://github.com/woodleighschool/freshservice-label/compare/v0.2.1...v0.2.2) (2026-09-10)
 
 
 ### Features
@@ -36,7 +36,7 @@
 * **mise:** update tool zizmor (1.29.0 → 1.30.0) ([#31](https://github.com/woodleighschool/freshservice-label/issues/31)) ([bc35d95](https://github.com/woodleighschool/freshservice-label/commit/bc35d95964c68c9f58b102848f2d745b7c93ca9c))
 * remove redundant workflow lint task ([870af80](https://github.com/woodleighschool/freshservice-label/commit/870af80dce47eeead50c870f5db0b6a7b5fc47b6))
 
-## [0.2.1](https://github.com/woodleighschool/freshservice-label/compare/0.2.0...0.2.1) (2026-08-25)
+## [0.2.1](https://github.com/woodleighschool/freshservice-label/compare/v0.2.0...v0.2.1) (2026-08-25)
 
 
 ### Code Refactoring
@@ -48,7 +48,7 @@
 
 * **mise:** update tool oxfmt (0.64.0 → 0.65.0) ([#24](https://github.com/woodleighschool/freshservice-label/issues/24)) ([b7d2bb1](https://github.com/woodleighschool/freshservice-label/commit/b7d2bb1558e039227253e6bc2835492f6aacce76))
 
-## [0.2.0](https://github.com/woodleighschool/freshservice-label/compare/0.1.3...0.2.0) (2026-08-24)
+## [0.2.0](https://github.com/woodleighschool/freshservice-label/compare/v0.1.3...v0.2.0) (2026-08-24)
 
 
 ### ⚠ BREAKING CHANGES
@@ -102,7 +102,7 @@
 * **release-please:** sync configuration ([cbac61a](https://github.com/woodleighschool/freshservice-label/commit/cbac61ace7e0d4811c7bb28e4f0b8e9f45aa4464))
 * **tooling:** sync shared configuration ([57bca04](https://github.com/woodleighschool/freshservice-label/commit/57bca04123176d57f251ec3b6e1b4d7755388e04))
 
-## [0.1.3](https://github.com/woodleighschool/freshservice-label/compare/0.1.2...0.1.3) (2026-08-04)
+## [0.1.3](https://github.com/woodleighschool/freshservice-label/compare/v0.1.2...v0.1.3) (2026-08-04)
 
 
 ### Bug Fixes
@@ -110,7 +110,7 @@
 * **ci:** disable automatic mise installs ([88ee45e](https://github.com/woodleighschool/freshservice-label/commit/88ee45ed6f00999830776f06726c4bc23a88e551))
 * resolve Go lint findings ([9ab827b](https://github.com/woodleighschool/freshservice-label/commit/9ab827b45fc9e2edc12945bd8e30c429c4c824af))
 
-## [0.1.2](https://github.com/woodleighschool/freshservice-label/compare/v0.1.1...0.1.2) (2026-07-28)
+## [0.1.2](https://github.com/woodleighschool/freshservice-label/compare/v0.1.1...v0.1.2) (2026-07-28)
 
 
 ### Features
