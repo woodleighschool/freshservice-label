@@ -17,14 +17,36 @@ concurrency:
   cancel-in-progress: ${{ github.event_name != 'release' }}
 
 jobs:
+  versions:
+    name: Versions
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    outputs:
+      build-date: ${{ steps.versions.outputs.build-date }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Resolve versions
+        id: versions
+        run: echo "build-date=$(git show -s --format=%cI HEAD)" >> "$GITHUB_OUTPUT"
+
   release:
     name: Release
+    needs: versions
     permissions:
       contents: read
       id-token: write
       packages: write
     uses: docker/github-builder/.github/workflows/build.yml@58cb9f5b71b1836d6f690c1e95effdeb9b98cb8a # v1.17.0
     with:
+      build-args: |
+        VERSION=${{ github.ref_name }}
+        COMMIT=${{ github.sha }}
+        DATE=${{ needs.versions.outputs.build-date }}
       cache: true
       meta-images: ghcr.io/${{ github.repository }}
       meta-tags: |

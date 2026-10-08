@@ -7,6 +7,9 @@ FROM --platform=$BUILDPLATFORM golang:1.27.1-alpine AS builder
 
 ARG TARGETOS
 ARG TARGETARCH
+ARG VERSION=dev
+ARG COMMIT=unknown
+ARG DATE=unknown
 
 RUN apk add --no-cache upx
 WORKDIR /workspace
@@ -23,7 +26,9 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} \
     go-licenses save ./cmd/freshservice-label --save_path third_party_licenses --ignore github.com/woodleighschool/freshservice-label --force
 
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} \
-    go build -trimpath -ldflags "-s -w" -o freshservice_label ./cmd/freshservice-label
+    go build -trimpath \
+    -ldflags "-s -w -X main.version=${VERSION#v} -X main.commit=${COMMIT} -X main.date=${DATE}" \
+    -o freshservice_label ./cmd/freshservice-label
 RUN upx --best --lzma freshservice_label
 
 # ---- Runtime --------------------------------------------------------------

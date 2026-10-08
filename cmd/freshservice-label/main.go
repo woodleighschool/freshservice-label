@@ -15,6 +15,12 @@ import (
 	"github.com/woodleighschool/freshservice-label/internal/ticketprinter"
 )
 
+var (
+	version = "dev"
+	commit  = "unknown"
+	date    = "unknown"
+)
+
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
@@ -57,7 +63,8 @@ func run(args []string, logger *slog.Logger) error {
 
 	errCh := make(chan error, 1)
 	go func() {
-		logger.InfoContext(ctx, "server listening", "addr", cfg.ListenAddr)
+		logger.InfoContext(ctx, "server listening",
+			"addr", cfg.ListenAddr, "version", version, "commit", commit, "date", date)
 		errCh <- httpServer.ListenAndServe()
 	}()
 
