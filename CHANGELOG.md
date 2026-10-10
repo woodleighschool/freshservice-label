@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.3](https://github.com/woodleighschool/freshservice-label/compare/v0.2.2...v0.2.3) (2026-10-10)
+
+
+### Bug Fixes
+
+* **build:** unify Go toolchain and license tool versions ([407f714](https://github.com/woodleighschool/freshservice-label/commit/407f714201667c2490ee8776f6015518ee0e2c76))
+* **go:** update module golang.org/x/image (v0.46.0 → v0.47.0) ([#59](https://github.com/woodleighschool/freshservice-label/issues/59)) ([99153b4](https://github.com/woodleighschool/freshservice-label/commit/99153b4abe04520e02bae1538e5d5a18cce4d010))
+
 ## [0.2.2](https://github.com/woodleighschool/freshservice-label/compare/v0.2.1...v0.2.2) (2026-09-10)
 
 
