@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.4](https://github.com/woodleighschool/freshservice-label/compare/v0.2.3...v0.2.4) (2026-11-11)
+
+
+### Bug Fixes
+
+* **go:** update module github.com/caarlos0/env/v11 (v11.4.1 → v11.4.2) ([#87](https://github.com/woodleighschool/freshservice-label/issues/87)) ([c8d5f23](https://github.com/woodleighschool/freshservice-label/commit/c8d5f233aca69571536dffc2b9e44c5b31ceac75))
+* **go:** update module github.com/spf13/pflag (v1.0.10 → v1.1.0) ([#90](https://github.com/woodleighschool/freshservice-label/issues/90)) ([5f6bd6c](https://github.com/woodleighschool/freshservice-label/commit/5f6bd6c4fc1e3341c9ab296a8f75e0e4d38990af))
+* **go:** update module golang.org/x/image (v0.47.0 → v0.48.0) ([#93](https://github.com/woodleighschool/freshservice-label/issues/93)) ([d1c11ad](https://github.com/woodleighschool/freshservice-label/commit/d1c11ad4887bcad03de344079a619d20d8be2c3c))
+
 ## [0.2.3](https://github.com/woodleighschool/freshservice-label/compare/v0.2.2...v0.2.3) (2026-10-22)
 
 
