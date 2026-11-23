@@ -28,7 +28,6 @@ run = "go mod tidy -diff"
 run = "govulncheck ./..."
 
 [tasks.test]
-description = "Vet Go code and run race-enabled tests"
 run = ["go vet ./...", "go test -race -count=1 ./..."]
 
 [tasks.lint-fix]
@@ -47,7 +46,6 @@ test -z "$unformatted" || { printf '%s\n' "$unformatted"; exit 1; }
 '''
 
 [tasks.preview]
-description = "Render the example label preview"
 run = "go run ./cmd/preview"
 
 [tasks.clean]
